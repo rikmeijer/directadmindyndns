@@ -1,5 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 
+use Masterminds\HTML5;
+
+require 'vendor/autoload.php';
 require 'config.php';
 
 $apiCall = function($url) use ($directadmin_url, $domain, $username, $password) {
@@ -8,16 +11,18 @@ $apiCall = function($url) use ($directadmin_url, $domain, $username, $password) 
             "header" => "Authorization: Basic " . base64_encode($username . ':' . $password)
         ]
     ]));
-    return stristr($status, 'error=0') !== false;
+    return stripos($status, 'error=0') !== false;
 };
 
-$myip = file_get_contents($reflector_url . '/reflector.php', false, stream_context_create(array(
-    "ssl"=>array(
-        "allow_self_signed"=>true,
-        "verify_peer"=>false,
-        "verify_peer_name"=>false,
-    )
-)));
+$whatsmyipDom = new HTML5();
+$dom = $whatsmyipDom->loadHTMLFile('https://www.whatismyip.org/');
+$ipElement = new DOMXPath($dom);
+$ipText = $ipElement->query('//*[contains(text(), "Your IP:")]')->item(0)->parentNode->textContent;
+if (preg_match('/Your IP: ((\d+\.){3}(\d+))/', $ipText, $matches) === false) {
+    exit('can not determine ip');
+}
+$myip = $matches[1];
+
 $current_dns = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain, false, stream_context_create([
     "http" => [
         "header" => "Authorization: Basic " . base64_encode($username . ':' . $password)

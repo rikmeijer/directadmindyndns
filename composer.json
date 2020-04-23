@@ -1,0 +1,20 @@
+{
+    "name": "rikmeijer/directadmindyndns",
+    "description": "Simple script that uses whatsmyip.org for retrieving remote IP and updating DNS records in DirectAdmin accordingly",
+    "type": "project",
+    "require": {
+        "masterminds/html5": "2.7",
+      "ext-dom": "*"
+    }
+    ,
+    "require-dev": {
+        "roave/security-advisories": "dev-master"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rik Meijer",
+            "email": "hello@rikmeijer.nl"
+        }
+    ]
+}
