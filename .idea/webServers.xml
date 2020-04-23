@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="4e092c56-e948-47cf-baf8-3d92ec37b786" name="remoteip.rikmeijer.nl" url="http://remoteip.rikmeijer.nl">
+        <fileTransfer rootFolder="/home/u28492p22384" accessType="SFTP" host="web0115.zxcs.nl" port="7685" sshConfigId="cb8d2e1b-5c89-43c2-9934-0b800480c9eb" sshConfig="u28492p22384@web0115.zxcs.nl:7685 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="97fc03ab-1972-4e74-982f-0000dc889ab9" name="home.rikmeijer.nl" url="http://home.rikmeijer.nl">
+        <fileTransfer rootFolder="/home/ubuntu" accessType="SFTP" host="pi4.home.rikmeijer.nl" port="22" sshConfigId="5ee0d1b6-d8dc-4b1f-8636-4aa5f56be779" sshConfig="ubuntu@pi4.home.rikmeijer.nl:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
