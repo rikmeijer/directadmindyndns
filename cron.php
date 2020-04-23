@@ -14,9 +14,7 @@ $apiCall = function($url) use ($directadmin_url, $domain, $username, $password) 
     return stripos($status, 'error=0') !== false;
 };
 
-$whatsmyipDom = new HTML5();
-$dom = $whatsmyipDom->loadHTMLFile('https://www.whatismyip.org/');
-$ipElement = new DOMXPath($dom);
+$ipElement = new DOMXPath((new HTML5())->loadHTMLFile('https://www.whatismyip.org/'));
 $ipText = $ipElement->query('//*[contains(text(), "Your IP:")]')->item(0)->parentNode->textContent;
 if (preg_match('/Your IP: ((\d+\.){3}(\d+))/', $ipText, $matches) === false) {
     exit('can not determine ip');
