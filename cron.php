@@ -27,17 +27,22 @@ $current_dns = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain
     ]
 ]));
 
-if (preg_match('/^' . preg_quote($host, '/') . '.*' . preg_quote($myip, '/') . '$/m', $current_dns) === 1) {
-    exit('up2date');
+foreach ($hosts as $host) {
+    if (preg_match('/^' . preg_quote($host, '/') . '.*' . preg_quote($myip, '/') . '$/m', $current_dns) === 1) {
+        echo PHP_EOL . 'U2D: ' . $host;
+        continue;
+    }
+
+    if ($apiCall("&action=select&arecs0=name=" . $host . "&value=" . gethostbyname($host))  === false) {
+        echo PHP_EOL . 'ERR: ' . $host;
+        continue;
+    }
+
+
+    if ($apiCall("&action=add&type=A&name=" . $host . "&value=" . $myip)  === false) {
+        echo PHP_EOL . 'ERR: ' . $host;
+        continue;
+    }
 }
 
-if ($apiCall("&action=select&arecs0=name=" . $host . "&value=" . gethostbyname($host))  === false) {
-    exit('error');
-}
-
-
-if ($apiCall("&action=add&type=A&name=" . $host . "&value=" . $myip)  === false) {
-    exit('error');
-}
-
-exit('updated');
+exit(PHP_EOL . 'updated' . PHP_EOL);
