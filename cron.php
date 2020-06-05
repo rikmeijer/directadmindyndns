@@ -14,17 +14,23 @@ function myip() : string {
     return $matches[1];
 }
 
-$cmdApiDnsControl = function(string $domain, $url) use ($directadmin_url, $username, $password) : string {
-    return file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
+$daDNSControlAPI = function(string $domain, $url) use ($directadmin_url, $username, $password) : string {
+    static $cache = [];
+    if (array_key_exists($domain, $cache) === false) {
+        $cache[$domain] = [];
+    } elseif (array_key_exists($url, $cache[$domain])) {
+        return $cache[$domain][$url];
+    }
+    return $cache[$domain][$url] = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
         "http" => [
             "header" => "Authorization: Basic " . base64_encode($username . ':' . $password)
         ]
     ]));
 };
 
-$api = function(string $domain) use ($cmdApiDnsControl) : callable {
-    $cmdApiDNSChange = function(string $url) use ($cmdApiDnsControl, $domain) : bool {
-        return stripos($cmdApiDnsControl($domain, $url), 'error=0') !== false;
+$createDomainDNSAPI = function(string $domain) use ($daDNSControlAPI) : callable {
+    $cmdApiDNSChange = function(string $url) use ($daDNSControlAPI, $domain) : bool {
+        return stripos($daDNSControlAPI($domain, $url), 'error=0') !== false;
     };
     return function(string $host, string $myip) use ($cmdApiDNSChange) : bool {
         if ($cmdApiDNSChange("&action=select&arecs0=" . urlencode("name=" . $host . "&value=" . gethostbyname($host)))  === false) {
@@ -43,18 +49,11 @@ echo PHP_EOL . 'MYIP ' . $myip;
 foreach ($hosts as $domain => $dnsHosts) {
     echo PHP_EOL . 'DOMAIN: ' . $domain;
 
-    $apiCall = $api($domain);
-
-    $current_dns = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain, false, stream_context_create([
-        "http" => [
-            "header" => "Authorization: Basic " . base64_encode($username . ':' . $password)
-        ]
-    ]));
-
+    $domainDNSAPI = $createDomainDNSAPI($domain);
     foreach ($dnsHosts as $host) {
-        if (preg_match('/^' . preg_quote($host, '/') . '.*' . preg_quote($myip, '/') . '$/m', $current_dns) === 1) {
+        if (preg_match('/^' . preg_quote($host, '/') . '.*' . preg_quote($myip, '/') . '$/m', $daDNSControlAPI($domain, '')) === 1) {
             echo PHP_EOL . 'U2D: ' . $host;
-        } elseif ($apiCall($host, $myip) === false) {
+        } elseif ($domainDNSAPI($host, $myip) === false) {
             echo PHP_EOL . 'ERR: ' . $host;
         }
     }
