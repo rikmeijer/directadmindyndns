@@ -14,21 +14,23 @@ function myip() : string {
     return $matches[1];
 }
 
-$cmdApiDnsControl = function(string $domain, $url) use ($directadmin_url, $username, $password) : bool {
-    $result = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
+$cmdApiDnsControl = function(string $domain, $url) use ($directadmin_url, $username, $password) : string {
+    return file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
         "http" => [
             "header" => "Authorization: Basic " . base64_encode($username . ':' . $password)
         ]
     ]));
-    return stripos($result, 'error=0') !== false;
 };
 
 $api = function(string $domain) use ($cmdApiDnsControl) : callable {
-    return function(string $host, string $myip) use ($cmdApiDnsControl, $domain) : bool {
-        if ($cmdApiDnsControl($domain, "&action=select&arecs0=" . urlencode("name=" . $host . "&value=" . gethostbyname($host)))  === false) {
+    $cmdApiDNSChange = function(string $url) use ($cmdApiDnsControl, $domain) : bool {
+        return stripos($cmdApiDnsControl($domain, $url), 'error=0') !== false;
+    };
+    return function(string $host, string $myip) use ($cmdApiDNSChange) : bool {
+        if ($cmdApiDNSChange("&action=select&arecs0=" . urlencode("name=" . $host . "&value=" . gethostbyname($host)))  === false) {
             return false;
         }
-        if ($cmdApiDnsControl($domain, "&action=add&type=A&name=" . $host . "&value=" . $myip)  === false) {
+        if ($cmdApiDNSChange("&action=add&type=A&name=" . $host . "&value=" . $myip)  === false) {
             return false;
         }
         return true;
