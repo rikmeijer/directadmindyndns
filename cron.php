@@ -5,6 +5,15 @@ use Masterminds\HTML5;
 require 'vendor/autoload.php';
 require 'config.php';
 
+function myip() : string {
+    $ipElement = new DOMXPath((new HTML5())->loadHTMLFile('https://www.whatismyip.org/'));
+    $ipText = $ipElement->query('//*[contains(text(), "Your IP:")]')->item(0)->parentNode->textContent;
+    if (preg_match('/Your IP: ((\d+\.){3}(\d+))/', $ipText, $matches) === false) {
+        exit('can not determine ip');
+    }
+    return $matches[1];
+}
+
 $cmdApiDnsControl = function(string $domain, $url) use ($directadmin_url, $username, $password) : string {
     return file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
         "http" => [
@@ -24,12 +33,7 @@ foreach ($hosts as $domain => $dnsHosts) {
 
     $apiCall = $api($domain);
 
-    $ipElement = new DOMXPath((new HTML5())->loadHTMLFile('https://www.whatismyip.org/'));
-    $ipText = $ipElement->query('//*[contains(text(), "Your IP:")]')->item(0)->parentNode->textContent;
-    if (preg_match('/Your IP: ((\d+\.){3}(\d+))/', $ipText, $matches) === false) {
-        exit('can not determine ip');
-    }
-    $myip = $matches[1];
+    $myip = myip();
 
     $current_dns = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain, false, stream_context_create([
         "http" => [
@@ -43,7 +47,7 @@ foreach ($hosts as $domain => $dnsHosts) {
             continue;
         }
 
-        if ($apiCall("&action=select&arecs0=name=" . $host . "&value=" . gethostbyname($host))  === false) {
+        if ($apiCall("&action=select&arecs0=" . urlencode("name=" . $host . "&value=" . gethostbyname($host)))  === false) {
             echo PHP_EOL . 'ERR: ' . $host;
             continue;
         }
