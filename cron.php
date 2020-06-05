@@ -24,17 +24,24 @@ $cmdApiDnsControl = function(string $domain, $url) use ($directadmin_url, $usern
 };
 
 $api = function(string $domain) use ($cmdApiDnsControl) : callable {
-    return function(string $url) use ($domain, $cmdApiDnsControl) : bool {
-        return $cmdApiDnsControl($domain, $url);
+    return function(string $host, string $myip) use ($cmdApiDnsControl, $domain) : bool {
+        if ($cmdApiDnsControl($domain, "&action=select&arecs0=" . urlencode("name=" . $host . "&value=" . gethostbyname($host)))  === false) {
+            return false;
+        }
+        if ($cmdApiDnsControl($domain, "&action=add&type=A&name=" . $host . "&value=" . $myip)  === false) {
+            return false;
+        }
+        return true;
     };
 };
+
+$myip = myip();
+echo PHP_EOL . 'MYIP ' . $myip;
 
 foreach ($hosts as $domain => $dnsHosts) {
     echo PHP_EOL . 'DOMAIN: ' . $domain;
 
     $apiCall = $api($domain);
-
-    $myip = myip();
 
     $current_dns = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain, false, stream_context_create([
         "http" => [
@@ -45,18 +52,8 @@ foreach ($hosts as $domain => $dnsHosts) {
     foreach ($dnsHosts as $host) {
         if (preg_match('/^' . preg_quote($host, '/') . '.*' . preg_quote($myip, '/') . '$/m', $current_dns) === 1) {
             echo PHP_EOL . 'U2D: ' . $host;
-            continue;
-        }
-
-        if ($apiCall("&action=select&arecs0=" . urlencode("name=" . $host . "&value=" . gethostbyname($host)))  === false) {
+        } elseif ($apiCall($host, $myip) === false) {
             echo PHP_EOL . 'ERR: ' . $host;
-            continue;
-        }
-
-
-        if ($apiCall("&action=add&type=A&name=" . $host . "&value=" . $myip)  === false) {
-            echo PHP_EOL . 'ERR: ' . $host;
-            continue;
         }
     }
     print(PHP_EOL . 'updated');
