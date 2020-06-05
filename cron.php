@@ -5,14 +5,17 @@ use Masterminds\HTML5;
 require 'vendor/autoload.php';
 require 'config.php';
 
-$api = function($domain) use ($directadmin_url, $username, $password) {
-    return function($url) use ($directadmin_url, $domain, $username, $password) {
-        $status = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
-            "http" => [
-                "header" => "Authorization: Basic " . base64_encode($username . ':' . $password)
-            ]
-        ]));
-        return stripos($status, 'error=0') !== false;
+$cmdApiDnsControl = function(string $domain, $url) use ($directadmin_url, $username, $password) : string {
+    return file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
+        "http" => [
+            "header" => "Authorization: Basic " . base64_encode($username . ':' . $password)
+        ]
+    ]));
+};
+
+$api = function(string $domain) use ($cmdApiDnsControl) : callable {
+    return function(string $url) use ($domain, $cmdApiDnsControl) : bool {
+        return stripos($cmdApiDnsControl($domain, $url), 'error=0') !== false;
     };
 };
 
