@@ -14,17 +14,18 @@ function myip() : string {
     return $matches[1];
 }
 
-$cmdApiDnsControl = function(string $domain, $url) use ($directadmin_url, $username, $password) : string {
-    return file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
+$cmdApiDnsControl = function(string $domain, $url) use ($directadmin_url, $username, $password) : bool {
+    $result = file_get_contents($directadmin_url . "/CMD_API_DNS_CONTROL?domain=" . $domain . $url, false, stream_context_create([
         "http" => [
             "header" => "Authorization: Basic " . base64_encode($username . ':' . $password)
         ]
     ]));
+    return stripos($result, 'error=0') !== false;
 };
 
 $api = function(string $domain) use ($cmdApiDnsControl) : callable {
     return function(string $url) use ($domain, $cmdApiDnsControl) : bool {
-        return stripos($cmdApiDnsControl($domain, $url), 'error=0') !== false;
+        return $cmdApiDnsControl($domain, $url);
     };
 };
 
