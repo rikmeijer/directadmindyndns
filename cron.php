@@ -4,8 +4,8 @@ use Masterminds\HTML5;
 
 function myip() : string {
     $ipElement = new DOMXPath((new HTML5())->loadHTMLFile('https://www.whatismyip.org/'));
-    $ipText = $ipElement->query('//*[contains(text(), "Your IP:")]')->item(0)->parentNode->textContent;
-    if (preg_match('/Your IP: ((\d+\.){3}(\d+))/', $ipText, $matches) === false) {
+    $ipText = $ipElement->query('//*[contains(text(), "Your IP Address is:")]')->item(0)->parentNode->textContent;
+    if (preg_match('/Your IP Address is: ((\d+\.){3}(\d+))/', $ipText, $matches) === false) {
         exit('can not determine ip');
     }
     return $matches[1];
