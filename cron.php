@@ -3,12 +3,13 @@
 use Masterminds\HTML5;
 
 function myip() : string {
-    $ipElement = new DOMXPath((new HTML5())->loadHTMLFile('https://www.whatismyip.org/'));
-    $response = $ipElement->query('//*[contains(text(), "Your IP:")]');
+    $dom = (new HTML5())->loadHTMLFile('https://www.whatismyip.org/');
+    $ipElement = new DOMXPath($dom);
+    $response = $ipElement->query('//*[@class="myfullip"]');
     if ($response->count() === 0) {
-        exit('can not determine ip');
+        exit('can not determine ip (h2 not found)');
     }
-    $ipText = $response->item(0)->parentNode->textContent;
+    $ipText = $response->item(0)->textContent;
     if (preg_match('/((\d+\.){3}(\d+))/', $ipText, $matches) === false) {
         exit('can not determine ip');
     }
